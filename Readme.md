@@ -1,6 +1,6 @@
 # OG:BG Lobby Index File
 
-[中文](CN-Readme.md) | [English](EN-Readme.md)
+[中文](Readme.md) | [English](EN-Readme.md)
 
 这是一个中文版本首页文件。
 
