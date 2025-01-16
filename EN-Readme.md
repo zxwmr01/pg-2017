@@ -1,6 +1,6 @@
 # OG:BG Lobby Index File
 
-中文 | English
+[中文](Readme.md) | [English](EN-Readme.md)
 
 This is a Chinese version of the home page file.
 
