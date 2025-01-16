@@ -1,0 +1,232 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>index</title>
+    <link rel="stylesheet" href="./css/agency.css">
+    <link rel="stylesheet" href="./css/overpass.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <script src="./js/socket.io.min.js"></script>
+</head>
+<body onload="createRole()">
+    
+    <div class="main" id="app">
+        <h1 class="title-text">OG:BattleGround
+        </h1>
+        <h2 class="subtitle-text">Battle Royale</h2>
+
+        <div class="right-menu">
+            <p class="right-menu-item" v-for="router in routers" :class="{'active': router.active == true}">{{ router.name }}</p>
+            <!-- <p class="right-menu-item">LOBBIES</p>
+            <p class="right-menu-item">FRIENDS</p> -->
+        </div>
+
+        <div class="right-submenu">
+            <p class="right-submenu-item" v-for="router in currentRouter.child" :class="{'active': router.active == true}">{{router.name}}</p>
+            <!-- <p class="right-submenu-item">CUSTOM MATCH</p> -->
+        </div>
+
+        <p class="debug-text" :class="{'hide': !isDebug}">{{ debugInfo }}</p>
+        <p class="serial-text">{{ userSerial }}</p>
+
+        <p class="bottom-text">Early Access pubg v2.6.30.4</p>
+
+        <div class="game-play-container">
+            <div class="join-server-container">
+                <div style="font-size: 2vh;color: lightgray;margin-bottom: 0.5vh;">选择服务器</div>
+                <button v-for="server in serverList"
+                        v-bind:class="{'sel-server-button': true, 'active': server.name === currentServer.name}"
+                        :id="server.name"
+                        v-on:click="selectServer(server)">
+                        {{ server.name }}
+                </button>
+            </div>
+            <br>
+            <div style="display: flex;flex-direction: row;align-items: flex-end;">
+                <button class="join-server-button" onclick="joinServer()" id="join">
+                    <span id="join-server-text">START</span>
+                    <span id="join-server-hint" style="padding: 0;margin: 0;font-size: 0.5em;"></span>
+                </button>
+                <div class="player-count" :class="{'hide': currentServer.name != 'Asia Server'}">
+                    {{ playerCountInfo }}
+                </div>
+            </div>
+        </div>
+    
+        <div class="side-container">
+            <div class="discord-card" onclick="joinDiscord()">
+                <div class="title">
+                    <img src="http://168.138.214.86/icons/discord.svg" alt="" class="discord-icon-bg">
+                    请加入我们的 Discord!
+                </div>
+                <div class="content">
+                    加入我们的 Discord，您可以向其他社区成员提出问题，获取游戏的最新版本！
+                </div>
+            </div>
+        </div>
+
+        <!-- <div class="player-info-container">
+            <div class="bp-info"><strong>BP</strong>999</div>
+            <div class="user-info">
+                {{ Player }}
+            </div>
+        </div> -->
+    </div>
+    <script src="./js/jquery-2.2.0.min.js"></script>
+    <script src="./js/jquery-ui-1.11.4.min.js"></script>
+    <script src="./js/jquery.selectBoxIt-3.8.1.min.js"></script>
+    <script src="./js/coherent.js"></script>
+    <script src="./js/coherent.mock.js"></script>
+    <script src="./js/mock.entry.js"></script>
+    <script src="./js/vue.js"></script>
+    <script>
+        var serverList = [
+            {
+                name: "Asia Server",
+                description: "Asia Server",
+                ip: "218.93.206.88:52525"
+            },
+            {
+                name: "NA Server",
+                description: "North Amercian Server",
+                ip: "40.124.122.51:8888"
+            },
+            {
+                name: "OCE Server",
+                ip: "119.17.151.38:8888"
+            },
+            {
+                name: "SA Server",
+                ip: "pubgsabrasil.servegame.com"
+            }
+        ]
+
+        var routers = [
+            {
+                name: "大厅",
+                active: true,
+                child: [
+                    {
+                        name: "公开比赛",
+                        active: true,
+                    },
+                    {
+                        name: "自定义比赛",
+                    }
+                ]
+            },
+            {
+                name: "好友",
+                child: []
+            }
+        ]
+
+        // var player = engine.trigger('GetClientAuthData')
+        // console.log("Yes");
+
+        function joinDiscord() {
+            engine.trigger('OpenExternalBrowser', 'https://discord.gg/UMhffXUVpm');
+        }
+
+        function createRole() {
+            engine.trigger('DestoryLobbyCharacter', 0)
+            engine.trigger('DestoryLobbyCharacter', 1)
+            engine.trigger('DestoryLobbyCharacter', 2)
+            engine.trigger('DestoryLobbyCharacter', 3)
+            engine.trigger('SetLobbyCharacterAngle',0,90)
+            engine.trigger('CreateLobbyCharacter', 0, false, "","test1")
+            engine.trigger('UpdateLobbyCharacter', 0,{
+                "Gender":false,
+                "BoolOptions":[],
+                "FloatOptions":[],
+                "StringOptions":[
+                    {"First":"Hair","Second":"F_Hair_A_04"},
+                    {"First":"Face","Second":"F_Face_01"},
+                    {"First":"NudeBody","Second":"F_NudeBody_01"},
+                ],"ItemIds":[]});
+        }
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                serverList: serverList,
+                Player: "player",
+                userSerial: "userSerial",
+                currentServer: serverList[0],
+                debugInfo: "Here is debugInfo",
+                isDebug: false,
+                routers: routers,
+                currentRouter: routers[0],
+                playerCountInfo: "等待更新",
+            },
+            methods: {
+                selectServer: selectServer,
+                joinServer: joinServer,
+                getServerByName: getServerByName,
+            }
+        });
+        
+
+        $().ready(function() {
+            var result = engine.call('GetClientAuthData');
+            result.then(function (r) {
+                app.debugInfo = "info:" + JSON.stringify(r);
+                app.userSerial = r.userSerial;
+                app.Player = r.userSerial.toString().split('-')[0];
+                // console.log
+            })
+
+
+            
+            // var result = engine.trigger("UdpPingTest", "218.93.206.88:52525", 1, 5);
+            // app.debugInfo = "info:" + result;
+            // engine.on('UdpPingTestResult', function (n, l, t) {
+            //     console.log(n, l, t);
+            //     app.debugInfo = "info:" + n + " " + l + " " + t;
+            //     $(".debug-text").text(n + " " + l + " " + t);
+            // })
+            // $("#join-server-hint").text(result[0].ping);
+            // $("#join-server-hint").text(result[0].ip);
+            // updateServerStatus();
+        })
+
+        function selectServer(val) {
+            app.server = val;
+            updateServerStatus();
+        }
+
+        function getServerByName(serverName) {
+            return serverList.find(function (item) {
+                return item.name === serverName;
+            });
+        }
+
+        function selectServer(server) {
+            app.currentServer = server;
+            if (server.name == "Asia Server") {
+                $.ajax({
+                    url: "GetPlayerNum?region=ASIA",
+                    type: "GET",
+                    dataType: "text",
+                    success: function (data) {
+                        app.playerCountInfo = data;
+                    }
+                })
+            }
+            // updateServerStatus();
+        }
+
+        function joinServer() {
+            try {
+                $("#join-server-text").text('加入中....');
+                $("#join-server-hint").text("a" + app.currentServer.ip);
+                engine.trigger('JoinToDedicatedServer', app.currentServer.ip);
+            } catch (e) {
+                $("#join-server-text").text(e);
+            }
+        }
+    </script>
+</body>
+</html>
