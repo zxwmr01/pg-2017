@@ -1,6 +1,6 @@
 # OG：BG Lobby Index File
 
-中文 | English
+中文1 | English
 
 这是一个中文版本首页文件。
 
